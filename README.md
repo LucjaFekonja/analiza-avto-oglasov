@@ -2,6 +2,7 @@
 
 Analizirala bom avto oglase na spletni strani https://www.autoscout24.com/
 
+
 Za vsak oglas bom zajela:
 - Znamka avtomobila
 - Cena
