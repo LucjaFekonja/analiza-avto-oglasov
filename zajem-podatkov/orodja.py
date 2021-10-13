@@ -2,52 +2,39 @@ import csv
 import json
 import os
 import requests
-import sys
 
 
-def pripravi_imenik(ime_datoteke):
-    '''Če še ne obstaja, pripravi prazen imenik za dano datoteko.'''
-    imenik = os.path.dirname(ime_datoteke)
-    if imenik:
-        os.makedirs(imenik, exist_ok=True)
-
-
-def shrani_spletno_stran(url, ime_datoteke, vsili_prenos=False):
-    '''Vsebino strani na danem naslovu shrani v datoteko z danim imenom.'''
+def url_v_niz(url):
+    ''' Sprejme niz (url), vrne vsebino spletne strani kot niz '''
     try:
-        print(f'Shranjujem {url} ...', end='')
-        sys.stdout.flush()
-        if os.path.isfile(ime_datoteke) and not vsili_prenos:
-            print('shranjeno že od prej!')
-            return
-        r = requests.get(url)
+        odziv = requests.get(url)                   # Če je odziv 200, ne potrebuje exceptiona
     except requests.exceptions.ConnectionError:
-        print('stran ne obstaja!')
+        print('Napaka pri povezovanju do:', url)    # Če pride do napake pri povezovanju
+        return None
+    
+    if odziv.status_code == requests.codes.ok:      # Če ni bilo errorja
+        return odziv.text                           # Vrne vsebino spletne strani
     else:
-        pripravi_imenik(ime_datoteke)
-        with open(ime_datoteke, 'w', encoding='utf-8') as datoteka:
-            datoteka.write(r.text)
-            print('shranjeno!')
+        print('Napaka pri prenosu strani:', url)
 
 
-def vsebina_datoteke(ime_datoteke):
-    '''Vrne niz z vsebino datoteke z danim imenom.'''
-    with open(ime_datoteke, encoding='utf-8') as datoteka:
-        return datoteka.read()
+def niz_v_file(niz, mapa, datoteka):
+    ''' niz pretvori v datoteko in so shrani v mapo, če že obstaja, naredi novo'''
+    os.makedirs(mapa, exist_ok=True)      
+    path = os.path.join(mapa, datoteka)    # Ustvari path do datoteke v katero shranjujemo
+    with open(path, 'w', encoding='utf-8') as dat:
+        dat.write(niz)                     # V datoteko vpiš niz
+    return None
 
 
-def zapisi_csv(slovarji, imena_polj, ime_datoteke):
-    '''Iz seznama slovarjev ustvari CSV datoteko z glavo.'''
-    pripravi_imenik(ime_datoteke)
-    with open(ime_datoteke, 'w', encoding='utf-8') as csv_datoteka:
-        writer = csv.DictWriter(csv_datoteka, fieldnames=imena_polj)
-        writer.writeheader()
-        for slovar in slovarji:
-            writer.writerow(slovar)
+def shrani_stran(url, mapa, datoteka):
+    ''' Vrne vsebino datoteke kot niz '''
+    niz = url_v_niz(url)
+    niz_v_file(niz, mapa, datoteka)
+    return None
 
 
-def zapisi_json(objekt, ime_datoteke):
-    '''Iz danega objekta ustvari JSON datoteko.'''
-    pripravi_imenik(ime_datoteke)
-    with open(ime_datoteke, 'w', encoding='utf-8') as json_datoteka:
-        json.dump(objekt, json_datoteka, indent=4, ensure_ascii=False)
+def preberi_file(mapa, datoteka):
+    path = os.path.join(mapa, datoteka)
+    with open(path, 'r', encoding='utf-8') as dat:
+        return dat.read()
